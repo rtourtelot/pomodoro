@@ -1,7 +1,13 @@
 class PomodoroTimer {
     constructor() {
-        this.workTime = 25 * 60; // 25 minutes in seconds
-        this.breakTime = 5 * 60; // 5 minutes in seconds
+        // Initialize title-related properties first
+        this.titleElement = document.querySelector('h1');
+        this.defaultTitle = this.titleElement.textContent;
+        this.originalTitle = document.title;
+
+        // Rest of the constructor initialization
+        this.workTime = 25 * 60;
+        this.breakTime = 5 * 60;
         this.timeLeft = this.workTime;
         this.isRunning = false;
         this.isWorkTime = true;
@@ -28,8 +34,22 @@ class PomodoroTimer {
             this.updateDisplay();
         });
 
-        this.originalTitle = document.title;
-        this.updateTitleDisplay();
+        // Task dialog setup
+        this.taskDialog = document.getElementById('taskDialog');
+        this.taskInput = document.getElementById('taskInput');
+        
+        document.getElementById('startTask').addEventListener('click', () => {
+            this.startTaskSession();
+        });
+
+        this.taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.startTaskSession();
+            }
+        });
+
+        // Initial display update
+        this.updateDisplay();
     }
 
     updateDisplay() {
@@ -47,32 +67,28 @@ class PomodoroTimer {
 
     updateTitleDisplay(timeString = '') {
         const mode = this.isWorkTime ? 'Work' : 'Break';
-        document.title = timeString 
-            ? `(${timeString}) ${mode} - Pomodoro`
-            : this.originalTitle;
+        const task = this.titleElement.textContent !== this.defaultTitle ? this.titleElement.textContent : '';
+        
+        if (timeString) {
+            document.title = task 
+                ? `(${timeString}) ${task} - ${mode}`
+                : `(${timeString}) ${mode} - Pomodoro`;
+        } else {
+            document.title = task 
+                ? `${task} - Pomodoro`
+                : this.originalTitle;
+        }
     }
 
     toggleStartPause() {
         if (this.isRunning) {
             this.pause();
         } else {
-            this.start();
-        }
-    }
-
-    start() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            this.startPauseButton.textContent = 'Pause';
-            this.startPauseButton.style.backgroundColor = '#EA580C'; // Update to match our current color scheme
-            this.timer = setInterval(() => {
-                this.timeLeft--;
-                this.updateDisplay();
-
-                if (this.timeLeft === 0) {
-                    this.switchMode();
-                }
-            }, 1000);
+            if (this.isWorkTime && this.titleElement.textContent === this.defaultTitle) {
+                this.showTaskDialog();
+            } else {
+                this.startTimer();
+            }
         }
     }
 
@@ -87,6 +103,7 @@ class PomodoroTimer {
         this.pause();
         this.isWorkTime = true;
         this.timeLeft = this.workTime;
+        this.titleElement.textContent = this.defaultTitle;
         this.updateModeDisplay();
         this.updateDisplay();
     }
@@ -106,6 +123,35 @@ class PomodoroTimer {
         // Play notification sound
         const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
         audio.play();
+    }
+
+    showTaskDialog() {
+        this.taskDialog.style.display = 'flex';
+        this.taskInput.focus();
+    }
+
+    startTaskSession() {
+        const task = this.taskInput.value.trim();
+        if (task) {
+            this.titleElement.textContent = task;
+            this.taskDialog.style.display = 'none';
+            this.taskInput.value = '';
+            this.startTimer();
+        }
+    }
+
+    startTimer() {
+        this.isRunning = true;
+        this.startPauseButton.textContent = 'Pause';
+        this.startPauseButton.style.backgroundColor = '#EA580C';
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            this.updateDisplay();
+
+            if (this.timeLeft === 0) {
+                this.switchMode();
+            }
+        }, 1000);
     }
 }
 
