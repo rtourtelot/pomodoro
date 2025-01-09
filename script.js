@@ -48,6 +48,20 @@ class PomodoroTimer {
             }
         });
 
+        // Add event listeners for dialog dismissal
+        this.taskDialog.addEventListener('click', (e) => {
+            // Only close if clicking the overlay background, not the dialog itself
+            if (e.target === this.taskDialog) {
+                this.dismissDialog();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.taskDialog.style.display === 'flex') {
+                this.dismissDialog();
+            }
+        });
+
         // Initial display update
         this.updateDisplay();
     }
@@ -134,10 +148,10 @@ class PomodoroTimer {
         const task = this.taskInput.value.trim();
         if (task) {
             this.titleElement.textContent = task;
-            this.taskDialog.style.display = 'none';
-            this.taskInput.value = '';
-            this.startTimer();
         }
+        this.taskDialog.style.display = 'none';
+        this.taskInput.value = '';
+        this.startTimer();
     }
 
     startTimer() {
@@ -152,6 +166,12 @@ class PomodoroTimer {
                 this.switchMode();
             }
         }, 1000);
+    }
+
+    dismissDialog() {
+        this.taskDialog.style.display = 'none';
+        this.taskInput.value = '';
+        this.startTimer(); // Start the timer without setting a task
     }
 }
 
